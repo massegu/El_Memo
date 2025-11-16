@@ -18,22 +18,22 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = ({ message, avatarCompo
   return (
     <div className={`flex items-start gap-3 my-4 ${isUser ? 'justify-end' : 'justify-start'}`}>
       {!isUser && (
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center">
+        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-700 text-indigo-400 flex items-center justify-center">
           <BotIcon className="w-5 h-5" />
         </div>
       )}
       <div
-        className={`max-w-xs md:max-w-md lg:max-w-2xl px-4 py-3 rounded-2xl shadow-sm transition-all duration-300 ${
+        className={`max-w-xs md:max-w-md lg:max-w-2xl px-4 py-3 rounded-xl shadow-md transition-all duration-300 ${
           isUser
-            ? 'bg-blue-500 text-white rounded-br-none'
-            : 'bg-white text-slate-800 rounded-bl-none border border-slate-200'
+            ? 'bg-indigo-600 text-white rounded-br-none'
+            : 'bg-slate-700 text-slate-200 rounded-bl-none border border-slate-600'
         }`}
       >
         <p className="whitespace-pre-wrap">{messageText}</p>
       </div>
       {isUser && (
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center overflow-hidden">
-          <AvatarComponent className="w-full h-full text-slate-600" />
+        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-700 text-slate-400 flex items-center justify-center overflow-hidden">
+          <AvatarComponent className="w-full h-full" />
         </div>
       )}
     </div>

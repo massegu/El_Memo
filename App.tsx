@@ -6,6 +6,8 @@ import ChatInput from './components/ChatInput';
 import ChatMessageComponent from './components/ChatMessage';
 import RewardPanel from './components/RewardPanel';
 import StarIcon from './components/icons/StarIcon';
+// Fix: Import BotIcon to resolve reference error.
+import BotIcon from './components/icons/BotIcon';
 import { backgrounds, avatars, getAvatarComponent } from './rewards';
 
 const App: React.FC = () => {
@@ -16,7 +18,7 @@ const App: React.FC = () => {
 
   // Reward System State
   const [stars, setStars] = useState<number>(() => parseInt(localStorage.getItem('memoryStars') || '0', 10));
-  const [unlockedItems, setUnlockedItems] = useState<string[]>(() => JSON.parse(localStorage.getItem('memoryUnlockedItems') || '["default-avatar"]'));
+  const [unlockedItems, setUnlockedItems] = useState<string[]>(() => JSON.parse(localStorage.getItem('memoryUnlockedItems') || '["default-avatar", "default-bg"]'));
   const [selectedAvatarId, setSelectedAvatarId] = useState<string>(() => localStorage.getItem('memorySelectedAvatar') || 'default-avatar');
   const [selectedBackgroundId, setSelectedBackgroundId] = useState<string>(() => localStorage.getItem('memorySelectedBackground') || 'default-bg');
   const [isRewardPanelOpen, setRewardPanelOpen] = useState(false);
@@ -25,7 +27,7 @@ const App: React.FC = () => {
 
   // Memoize reward data
   const selectedAvatarComponent = useMemo(() => getAvatarComponent(selectedAvatarId), [selectedAvatarId]);
-  const selectedBackgroundClass = useMemo(() => backgrounds.find(b => b.id === selectedBackgroundId)?.className || 'bg-slate-50', [selectedBackgroundId]);
+  const selectedBackgroundClass = useMemo(() => backgrounds.find(b => b.id === selectedBackgroundId)?.className || 'bg-slate-900', [selectedBackgroundId]);
 
   // Persist reward state to localStorage
   useEffect(() => {
@@ -79,11 +81,12 @@ const App: React.FC = () => {
       setMessages((prev) => [...prev, { role: MessageRole.MODEL, text: '' }]);
 
       for await (const chunk of result) {
-        if (chunk.text.includes('[STAR_AWARDED]') && !starAwardedInTurn) {
+        currentResponse += chunk.text;
+        // Fix: Check for star award on the aggregated response to handle cases where the award tag is split across stream chunks.
+        if (currentResponse.includes('[STAR_AWARDED]') && !starAwardedInTurn) {
           setStars(prevStars => prevStars + 1);
           starAwardedInTurn = true;
         }
-        currentResponse += chunk.text;
         setMessages((prev) => {
           const newMessages = [...prev];
           newMessages[newMessages.length - 1].text = currentResponse;
@@ -107,14 +110,14 @@ const App: React.FC = () => {
 
   return (
     <div className={`flex flex-col h-screen max-w-4xl mx-auto font-sans transition-colors duration-500 ${selectedBackgroundClass}`}>
-      <header className="p-4 border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-0 z-20 flex justify-between items-center">
-        <div className="text-center flex-1">
-          <h1 className="text-xl font-bold text-slate-800">Terapeuta de Memoria</h1>
-          <p className="text-sm text-slate-500 hidden sm:block">Hola, soy el Dr. Alex. ¡Vamos a ejercitar tu memoria juntos!</p>
+      <header className="p-4 border-b border-slate-700 bg-slate-900/80 backdrop-blur-md sticky top-0 z-20 flex justify-between items-center">
+        <div className="text-left flex-1">
+          <h1 className="text-xl font-bold text-slate-100">Dr. Alex</h1>
+          <p className="text-sm text-slate-400 hidden sm:block">Entrenador de Memoria</p>
         </div>
         <button 
           onClick={() => setRewardPanelOpen(true)}
-          className="flex items-center gap-2 px-3 py-2 rounded-full bg-yellow-300 hover:bg-yellow-400 transition-colors text-yellow-800 font-bold"
+          className="flex items-center gap-2 px-3 py-2 rounded-full bg-amber-400 hover:bg-amber-500 transition-colors text-amber-900 font-bold shadow-lg shadow-amber-500/10"
           aria-label={`Abrir panel de recompensas. Tienes ${stars} estrellas.`}
         >
           <StarIcon className="w-5 h-5" />
@@ -124,7 +127,7 @@ const App: React.FC = () => {
 
       <main ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 md:p-6">
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg my-4" role="alert">
+          <div className="bg-red-500/20 border border-red-500 text-red-300 px-4 py-3 rounded-lg my-4" role="alert">
             <strong className="font-bold">Error: </strong>
             <span className="block sm:inline">{error}</span>
           </div>
@@ -135,20 +138,20 @@ const App: React.FC = () => {
             ))}
             {isLoading && messages[messages.length - 1]?.role === MessageRole.USER && (
                  <div className="flex items-start gap-3 my-4 justify-start">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-700 text-indigo-400 flex items-center justify-center">
+                         <BotIcon className="w-5 h-5 animate-pulse"/>
+                    </div>
+                    <div className="max-w-xs md:max-w-md lg:max-w-2xl px-4 py-3 rounded-xl bg-slate-700 text-slate-200 rounded-bl-none border border-slate-600 flex items-center gap-2">
                         <div className="w-2 h-2 bg-slate-400 rounded-full animate-pulse delay-75"></div>
                         <div className="w-2 h-2 bg-slate-400 rounded-full animate-pulse"></div>
                         <div className="w-2 h-2 bg-slate-400 rounded-full animate-pulse delay-150"></div>
-                    </div>
-                    <div className="max-w-xs md:max-w-md lg:max-w-2xl px-4 py-3 rounded-2xl bg-white text-slate-800 rounded-bl-none border border-slate-200">
-                        <p>Pensando...</p>
                     </div>
                 </div>
             )}
         </div>
       </main>
 
-      <footer className="bg-white/80 backdrop-blur-md border-t border-slate-200 p-2 md:p-4 sticky bottom-0">
+      <footer className="bg-slate-900/80 backdrop-blur-md border-t border-slate-700 p-2 md:p-4 sticky bottom-0">
         <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
       </footer>
 
